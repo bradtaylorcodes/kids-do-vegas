@@ -72,6 +72,28 @@ _Avoid_: Age bracket, level
 A Listing whose Age Range covers 0–18.
 _Avoid_: Family-friendly (as an age label)
 
+### Members
+
+**Member**:
+An adult visitor who has created an account. Anyone browsing without one is just a visitor.
+_Avoid_: User, subscriber, customer
+
+**Child Profile**:
+One of a Member's children, recorded as a nickname plus birth month and year. Child Profiles set the Member's default Age Group filters.
+_Avoid_: Kid, dependent, family member
+
+**Favorite**:
+A Listing a Member has marked to come back to.
+_Avoid_: Save, bookmark, like
+
+**Reminder**:
+An email sent to a Member before a favorited Event or a Program's registration or start date.
+_Avoid_: Notification, alert
+
+**Alert**:
+An email telling a Member about new Events that match their Child Profiles and Areas.
+_Avoid_: Digest, notification, reminder
+
 ### Geography
 
 **Las Vegas Valley**:
@@ -85,8 +107,16 @@ _Avoid_: Neighborhood, zone, region
 ### Data
 
 **Source**:
-Where a Listing's data came from: entered by hand, collected from a named feed (e.g. the library district calendar), or submitted by an Organization.
+Where a Listing's data came from: entered by hand, collected from a named feed (e.g. the library district calendar), created through Quick Add, or sent in as a Submission.
 _Avoid_: Origin, provider
+
+**Quick Add**:
+Turning a pasted social media post or flyer screenshot into a draft Event with AI, for the editor to review and publish.
+_Avoid_: Import, AI entry
+
+**Submission**:
+A Listing sent in by an Organization through a public form, held as a draft until the editor reviews it.
+_Avoid_: Request, suggestion
 
 **Collector**:
 An automated job that pulls Listings from one external Source on a schedule and keeps them up to date. A Collector only keeps Listings whose Age Range falls within 0–18.
