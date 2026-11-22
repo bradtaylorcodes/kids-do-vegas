@@ -161,8 +161,8 @@ Priorities: **P0** = required for launch, **P1** = should have for launch, **P2*
 
 | ID | Requirement | Priority |
 |---|---|---|
-| ANA-1 | **Self-hosted Umami** records page views, referrers, and site search terms. It sets no cookies, so no cookie banner is needed. | P0 |
-| ANA-2 | Analytics never records Member emails or Child Profile data. | P0 |
+| ANA-1 | **PostHog** records page views, referrers, site search terms, and funnels. It runs in cookieless mode, so no cookie banner is needed. | P0 |
+| ANA-2 | Analytics never records Member emails or Child Profile data, never links activity to a Member, and never records sessions. | P0 |
 
 ### 6.6 Library Collector
 
@@ -225,18 +225,20 @@ The **type-specific fields**:
 | **Performance** | Core Web Vitals in the "good" range on mobile. Resource, Organization, and Area pages are cached and refreshed on publish. Calendar pages are rendered per request or cached for 5 minutes or less. Member features must not stop public pages from being cached. |
 | **Mobile and accessibility** | Designed for phones first. Meets WCAG 2.2 AA. |
 | **Privacy** | Accounts are adults only and store minimal child data ([ADR 0002](./adr/0002-adult-only-accounts-minimal-child-data.md)). A Problem Report's email is optional and visible only to the editor. A privacy page explains what's stored and how to delete it. |
-| **Email** | One transactional email service sends sign-in links, Reminders, and Problem Report notifications. No marketing email. |
+| **Email** | Resend sends sign-in links, Reminders, and Problem Report notifications. No marketing email. |
 | **Time zone** | Everything is stored and shown in America/Los_Angeles. |
 | **Portability** | See [ADR 0001](./adr/0001-nextjs-and-payload.md): standard Postgres, S3-compatible storage if needed, a Dockerfile, and no host-specific services. |
-| **Hosting** | Railway: one always-on container plus Railway Postgres, and Umami. Target cost: $40/month or less, including email and translation. |
+| **Hosting** | Vercel Pro, Neon Postgres (through the Vercel marketplace), and Cloudflare R2 for uploaded files. Target cost: $40/month or less, including email, analytics, and translation. |
 | **Backups** | Daily Postgres backups, kept for at least 7 days. |
 
 ## 9. Stack
 
 One Next.js app with Payload CMS v3 inside it (TypeScript, Postgres). See [ADR 0001](./adr/0001-nextjs-and-payload.md).
 
-- **Hosting**: Railway, with the app as one always-on Docker container plus Railway Postgres. Umami runs as a separate Railway service.
-- **Collectors**: TypeScript, running as Payload scheduled jobs inside the app. Reminders are sent by a scheduled job too.
+- **Hosting**: Vercel (Pro plan), with Neon Postgres and Cloudflare R2 for uploaded files. No Vercel storage products, per [ADR 0001](./adr/0001-nextjs-and-payload.md).
+- **Collectors and Reminders**: TypeScript Payload jobs. Vercel Cron triggers Payload's job runner on a schedule.
+- **Email**: Resend.
+- **Analytics**: PostHog, cookieless.
 - **Rendering**: Resource, Organization, and Area pages are cached and refreshed when an edit is published. The calendar and Event pages are rendered per request (or cached for a few minutes). Member-specific parts load separately from the cached page.
 
 ---
@@ -247,14 +249,14 @@ One Next.js app with Payload CMS v3 inside it (TypeScript, Postgres). See [ADR 0
 - [ ] The library Collector has run successfully for **7 days in a row**, and the calendar shows at least 2 weeks of Events.
 - [ ] All launch Resources have a **reviewed Spanish translation**.
 - [ ] Sign-in, Favorites, Reminders, and account deletion work end to end.
-- [ ] Umami is recording visits.
+- [ ] PostHog is recording visits.
 - [ ] All P0 requirements are done.
 - [ ] `kidsdovegas.com` is registered and pointed at production, with HTTPS. (As of 2026-11-20, `kidsdovegas.com`, `.org`, and `.net` were all unregistered.)
 - [ ] The sitemap is submitted to Google Search Console.
 
 ## 11. Success measures
 
-Measured from Umami, the admin data, and Google Search Console:
+Measured from PostHog, the admin data, and Google Search Console:
 
 | Measure | Target (3 months after launch) |
 |---|---|
@@ -272,7 +274,7 @@ Measured from Umami, the admin data, and Google Search Console:
 
 | # | Milestone | Contents |
 |---|---|---|
-| M1 | **Foundation** | Next.js + Payload project, Postgres, Dockerfile, Railway deploy, Umami, email service, the admin collections for the whole data model |
+| M1 | **Foundation** | Next.js + Payload project, Neon Postgres, R2, Dockerfile, Vercel deploy and cron, PostHog, Resend, the admin collections for the whole data model |
 | M2 | **Public Resources** | Resources directory, detail pages, Category and Area pages, Report a problem form with editor email, structured data, sitemap |
 | M3 | **Library Collector** | The Communico Collector for both library Sources, Special/Regular classification, Collector status view |
 | M4 | **Events calendar** | Calendar with filters, Regulars view, Event and Program detail pages, "My kids' ages" control |
@@ -298,6 +300,7 @@ See the [Roadmap](./ROADMAP.md).
 | Member data (emails, Child Profiles) is leaked | Low | High | Store as little as possible ([ADR 0002](./adr/0002-adult-only-accounts-minimal-child-data.md)), no passwords, account deletion |
 | Reminder emails land in spam | Medium | Medium | A reputable email service with proper domain authentication (SPF, DKIM, DMARC) |
 | Collecting more content is a lot of work for one person | Medium | High | Launch with the library calendar plus Resources only; Quick Add and partnerships are next on the Roadmap |
+| A Collector run exceeds Vercel's function time limit | Medium | Medium | Run each library Source as its own job, and page through the feed in small batches |
 | Problem Report form used for spam | Medium | Low | Rate limiting and a honeypot field; add a CAPTCHA only if needed |
 
 ## 15. Open questions
@@ -305,4 +308,4 @@ See the [Roadmap](./ROADMAP.md).
 - What Areas does the launch set include? Proposed: Downtown/Central, Henderson, Summerlin, Northwest, North Las Vegas, Southwest/Enterprise, Southeast/Green Valley, East, Boulder City, Day Trips.
 - Exact mapping from Communico's age categories to numeric Age Ranges (decided during M3, once real feed data is in hand).
 - Whether to email the Las Vegas–Clark County Library District before launch to tell them about the Collector or ask for official access.
-- Which email service and which translation API to use.
+- Which AI model drafts the Spanish translations.
