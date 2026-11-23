@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Draft |
 | **Last updated** | 2026-11-22 |
-| **Related** | [Roadmap](./ROADMAP.md) · [Glossary](../GLOSSARY.md) · [ADR 0001: Next.js + Payload](./adr/0001-nextjs-and-payload.md) |
+| **Related** | [Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issues) · [Glossary](../GLOSSARY.md) · [ADR 0001: Next.js + Payload](./adr/0001-nextjs-and-payload.md) |
 
 Capitalised terms (Resource, Event, Area, and so on) are defined in the [Glossary](../GLOSSARY.md).
 
@@ -35,7 +35,7 @@ Answering "what can we do this Saturday with a 4-year-old, for free, near Hender
 
 ## 3. Non-goals (v1)
 
-Items that may come later are tracked in the [Roadmap](./ROADMAP.md).
+Items that may come later are tracked as [GitHub Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issues).
 
 - Programs (registration-based classes and camps)
 - Member accounts, Child Profiles, Favorites, Reminders, and the "My kids' ages" filter (see [ADR 0002](./adr/0002-adult-only-accounts-minimal-child-data.md) for when they're built)
@@ -48,8 +48,8 @@ Items that may come later are tracked in the [Roadmap](./ROADMAP.md).
 - Maps, map-based browsing, or distance search
 - Indoor/Outdoor filtering
 - Alerts about new matching Events
-- Collecting from social media, Eventbrite search, Nevada 211, or findhelp.org
-- Ads, sponsorships, or any other way of making money
+- Collecting from social media, Eventbrite search, Nevada 211, or findhelp.org. Their terms, technical limits, or unstructured content rule them out. Social media Events are entered by hand (later through Quick Add), and Nevada 211 is pursued as a data partnership instead. Not planned.
+- Ads, sponsorships, or any other way of making money. The site's value depends on trust and neutrality. Not planned unless running costs become a problem.
 - Booking or registering on the site (we link out)
 
 ## 4. Users
@@ -256,7 +256,7 @@ Measured from PostHog, the admin data, and Google Search Console:
 
 ## 13. After v1
 
-See the [Roadmap](./ROADMAP.md).
+Tracked as [GitHub Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issues). Planned work is labelled `enhancement` and states its priority in the body; unvetted ideas also carry `needs-triage`.
 
 ## 14. Risks
 
@@ -264,12 +264,12 @@ See the [Roadmap](./ROADMAP.md).
 |---|---|---|---|
 | The library's Communico endpoint is undocumented and could change or be blocked | Medium | High (the calendar goes stale) | The Collector status view shows failures; keep the Collector isolated so it's easy to fix; ask the library district about official access |
 | Library Regulars swamp the calendar | High | Medium | The Special/Regular split, classification rules, and editor overrides |
-| Hand-entered Resources go stale | High | Medium | The Last Verified date shown to visitors and Problem Reports; the Needs Verification view is first on the Roadmap |
+| Hand-entered Resources go stale | High | Medium | The Last Verified date shown to visitors and Problem Reports; the Needs Verification view ([#1](https://github.com/bradtaylorcodes/kids-do-vegas/issues/1)) is the first post-v1 priority |
 | Payload v3 → v4 upgrade effort | High (v4 is in beta) | Medium | Stay on v3 stable; plan the upgrade once v4 is stable |
-| Scope creeps back in before launch | Medium | Medium | v1 is an MVP; new ideas go to the Roadmap |
-| Automatic Spanish translations are wrong, including on Healthcare or Food Assistance Resources | Medium | Medium | The "Automatically translated" note, Problem Reports, and the editor can fix any translation; a review queue is on the Roadmap as an Idea |
+| Scope creeps back in before launch | Medium | Medium | v1 is an MVP; new ideas become GitHub Issues |
+| Automatic Spanish translations are wrong, including on Healthcare or Food Assistance Resources | Medium | Medium | The "Automatically translated" note, Problem Reports, and the editor can fix any translation; a review queue is an Idea ([#14](https://github.com/bradtaylorcodes/kids-do-vegas/issues/14)) |
 | Postgres full-text search isn't good enough | Low | Low | Watch search pages in PostHog; move to a dedicated search service if needed |
-| Collecting more content is a lot of work for one person | Medium | High | Launch with the library calendar plus Resources only; Quick Add and partnerships are next on the Roadmap |
+| Collecting more content is a lot of work for one person | Medium | High | Launch with the library calendar plus Resources only; Quick Add and partnerships are planned after v1 |
 | A Collector run exceeds Vercel's function time limit | Medium | Medium | Run each library Source as its own job, and page through the feed in small batches |
 | Problem Report form used for spam | Medium | Low | Rate limiting and a honeypot field; add a CAPTCHA only if needed |
 
