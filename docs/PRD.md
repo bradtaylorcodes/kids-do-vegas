@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Draft |
 | **Last updated** | 2026-11-22 |
-| **Related** | [Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issues) · [Glossary](../GLOSSARY.md) · [ADR 0001: Next.js + Payload](./adr/0001-nextjs-and-payload.md) |
+| **Related** | [Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issues) · [Glossary](../GLOSSARY.md) · [ADR 0001: Next.js + Payload](./adr/0001-nextjs-and-payload.md) · [ADR 0003: Previews instead of staging](./adr/0003-preview-deployments-instead-of-staging.md) |
 
 Capitalised terms (Resource, Event, Area, and so on) are defined in the [Glossary](../GLOSSARY.md).
 
@@ -101,9 +101,9 @@ Priorities: **P0** = required for launch, **P1** = should have for launch, **P2*
 |---|---|---|
 | PUB-1 | **Home page** shows this weekend's Special Events, a search box, quick links to Categories and Areas, and a Free filter shortcut. | P0 |
 | PUB-2 | **Events calendar** lists upcoming Special Events by date. Default range: the next 14 days. | P0 |
-| PUB-3 | The calendar has a **Regulars** tab or toggle showing routine Events, grouped by title and Location into one card with its schedule summarised (e.g. "Tue & Thu 10am"). | P0 |
-| PUB-4 | The calendar filters by date range, **Age Group** (several allowed), **Cost Tier**, and **Area** (several allowed). Filters are reflected in the URL so they can be shared and indexed. | P0 |
-| PUB-5 | **Resources directory** can be browsed by **Category** and **Area**, and filtered by Age Group and Cost Tier. | P0 |
+| PUB-3 | The calendar has a **Regulars** tab or toggle showing routine Events, grouped by title and Location into one card with its schedule summarised (e.g. "Tue & Thu 10am"). Routine offerings entered by hand are Resources with schedule text, not Events, so in v1 Regulars come from the Collector. | P0 |
+| PUB-4 | The calendar filters by date range, **Age Group** (several allowed), **Cost Tier**, and **Area** (several allowed). Filters are reflected in the URL so they can be shared and indexed. Valley-wide Events match every Area filter. | P0 |
+| PUB-5 | **Resources directory** can be browsed by **Category** and **Area**, and filtered by Age Group and Cost Tier. Valley-wide Resources appear under every Area. | P0 |
 | PUB-6 | A **Resource detail page** shows the name, description, Category, Organization, Locations (with Directions links), schedule text, Age Range, Cost Tier and Price Note, website and phone, Last Verified date, and upcoming Events linked to the Resource. | P0 |
 | PUB-7 | An **Event detail page** shows the title, date and time, Location (with Directions), Age Range, Cost Tier and Price Note, Organization, description, and a link to the Source or registration page. Past Events say clearly that they have ended. | P0 |
 | PUB-8 | An **Area page** lists the Resources and upcoming Events in that Area. These pages are a main way in from search ("kids activities Henderson"). | P1 |
@@ -115,9 +115,9 @@ Priorities: **P0** = required for launch, **P1** = should have for launch, **P2*
 
 | ID | Requirement | Priority |
 |---|---|---|
-| ES-1 | Every public page is available in **English and Spanish**, with a language switch on every page. Each language has its own URL so both can be found through search. | P0 |
-| ES-2 | Every Listing, hand-entered or collected, is **translated into Spanish automatically** when it's published, with no review step. Spanish pages show an "Automatically translated" note. | P0 |
-| ES-3 | The editor can edit any Listing's Spanish translation in the admin. | P0 |
+| ES-1 | Every public page is available in **English and Spanish**, with a language switch on every page. Each language has its own URL so both can be found through search: English at the root, Spanish under `/es` with translated path segments (`/es/recursos`, `/es/eventos`). Listing, Area, and Category slugs are shared by both languages. | P0 |
+| ES-2 | Every Listing, hand-entered or collected, is **translated into Spanish automatically** when it's published, with no review step. Spanish pages show an "Automatically translated" note. A Listing whose Translation Status is Edited is never re-translated automatically. Until a Listing is translated, its Spanish page shows the English text with a "Not yet translated" note. | P0 |
+| ES-3 | The editor can edit any Listing's Spanish translation in the admin, which sets its Translation Status to Edited. | P0 |
 | ES-4 | Site text (navigation, filters, forms, emails) is translated by hand. | P0 |
 
 Spanish is the only second language. v1 does no extra work to support more languages.
@@ -141,8 +141,8 @@ Spanish is the only second language. v1 does no extra work to support more langu
 
 | ID | Requirement | Priority |
 |---|---|---|
-| ANA-1 | **PostHog** records page views and referrers only. It runs in cookieless mode, so no cookie banner is needed. | P0 |
-| ANA-2 | Analytics records no personal data and no session recordings. | P0 |
+| ANA-1 | **PostHog** (US cloud) records page views and referrers only. It runs in cookieless mode with in-memory persistence, so no cookie banner is needed. Requests go through an `/ingest` path on the site's own domain so ad blockers don't drop them. | P0 |
+| ANA-2 | Analytics records no personal data and no session recordings. Autocapture is off. | P0 |
 
 ### 6.5 Library Collector
 
@@ -169,26 +169,30 @@ These are the conceptual fields; the definitions live in the [Glossary](../GLOSS
 | Field | Notes |
 |---|---|
 | Title, description | Translatable |
+| Slug | Shared by both languages. Events add their date (`baby-storytime-2026-12-03`), with a numeric suffix for duplicates on the same day |
 | Age Range (min, max) | Integers 0–18; required |
 | Cost Tier | Free / Low Cost / Paid; required |
 | Price Note | Optional, translatable |
 | Organization | Optional link |
 | Source | Hand-entered, or the Collector name + the Source's ID + the Source URL |
 | Published / draft | |
-| Last Verified | Hand-entered Listings only |
-| Spanish status | Not translated / Automatic |
+| Last Verified | Hand-entered Listings only. Defaults to the creation date; the editor updates it with a "Mark verified today" action, not by saving |
+| Translation Status | Not translated / Automatic / Edited |
 
 The **type-specific fields**:
 
 | Type | Fields |
 |---|---|
-| **Resource** | Category (required), Locations (0..n), schedule text, website, phone |
-| **Event** | Start and end date/time (America/Los_Angeles), Location (0..1), parent Resource (optional), Special or Regular, registration/info URL, editor override flags |
-| **Organization** | Name, website, phone, description |
+| **Resource** | Category (required), Locations (0..n; none means Valley-wide), schedule text (translatable), website, phone |
+| **Event** | Start and end date/time (America/Los_Angeles), Location (0..1; required and chosen from the parent Resource's Locations when there is a parent Resource; none and no parent means Valley-wide), parent Resource (optional), Special or Regular, registration/info URL, editor override flags |
+| **Organization** | Name, website, phone, description (translatable) |
 | **Location** | Name, street address, Area (required), Directions URL derived from the address |
-| **Area** | Name, slug. Launch set covers the whole valley plus "Day Trips" |
-| **Category** | Name, slug |
+| **Area** | Name, slug. Not translated. Launch set: Downtown/Central, Henderson (including Green Valley), Summerlin, Northwest, North Las Vegas, Southwest/Enterprise, East, Boulder City, Day Trips |
+| **Category** | Name (translatable), slug |
 | **Problem Report** | Listing, reason, message, optional email, status, created date |
+| **Editor** | The single admin account. Has a role so Members can be added later without changing access rules |
+
+Collector run records (for ADM-7) are defined in M3 with the Collector.
 
 ---
 
@@ -202,19 +206,23 @@ The **type-specific fields**:
 | **Privacy** | No visitor accounts in v1. Analytics is cookieless and records no personal data. A Problem Report's email is optional and visible only to the editor. |
 | **Email** | Resend sends Problem Report notifications to the editor. No other email in v1. |
 | **Time zone** | Everything is stored and shown in America/Los_Angeles. |
-| **Portability** | See [ADR 0001](./adr/0001-nextjs-and-payload.md): standard Postgres, S3-compatible storage if needed, a Dockerfile, and no host-specific services. |
-| **Hosting** | Vercel Pro, Neon Postgres (through the Vercel marketplace), and Cloudflare R2 for uploaded files. Target cost: $40/month or less, including email, analytics, and translation. |
+| **Portability** | See [ADR 0001](./adr/0001-nextjs-and-payload.md): standard Postgres, S3-compatible storage if uploads are ever added, a Dockerfile, and no host-specific services. |
+| **Environments** | No staging; each pull request gets a preview deployment with its own Neon database branch. See [ADR 0003](./adr/0003-preview-deployments-instead-of-staging.md). |
+| **Hosting** | Vercel Pro and Neon Postgres (through the Vercel marketplace). v1 has no uploaded files; Cloudflare R2 is the choice if images are added. Target cost: $40/month or less, including email, analytics, and translation. |
 | **Backups** | Daily Postgres backups, kept for at least 7 days. |
 
 ## 9. Stack
 
 One Next.js app with Payload CMS v3 inside it (TypeScript, Postgres). See [ADR 0001](./adr/0001-nextjs-and-payload.md).
 
-- **Hosting**: Vercel (Pro plan), with Neon Postgres and Cloudflare R2 for uploaded files. No Vercel storage products, per [ADR 0001](./adr/0001-nextjs-and-payload.md).
+- **Hosting**: Vercel (Pro plan), with Neon Postgres. No uploaded files in v1 (Cloudflare R2 if that changes). No Vercel storage products, per [ADR 0001](./adr/0001-nextjs-and-payload.md).
 - **Collectors**: TypeScript Payload jobs. Vercel Cron triggers Payload's job runner on a schedule.
 - **Search**: Postgres full-text search, with English and Spanish configurations. No separate search service.
 - **Email**: Resend.
-- **Analytics**: PostHog, cookieless.
+- **Analytics**: PostHog, cookieless, proxied through the site's domain.
+- **Site text**: `next-intl` with English and Spanish message files in the repo.
+- **Tooling**: pnpm, ESLint, Prettier, Vitest, Playwright (tests plus Playwright MCP for agents), GitHub Actions. `pnpm verify` runs typecheck, lint, unit tests, and end-to-end tests.
+- **Seed data**: a reference seed (launch Areas and Categories) runs in every environment and is safe to re-run; a sample seed of Resources and Events in both languages runs only in local development and CI.
 - **Rendering**: Resource and Area pages are cached and refreshed when an edit is published. The calendar and Event pages are rendered per request (or cached for a few minutes).
 
 ---
@@ -227,7 +235,7 @@ One Next.js app with Payload CMS v3 inside it (TypeScript, Postgres). See [ADR 0
 - [ ] Site search returns results in both languages.
 - [ ] PostHog is recording visits.
 - [ ] All P0 requirements are done.
-- [ ] `kidsdovegas.com` is registered and pointed at production, with HTTPS. (As of 2026-11-20, `kidsdovegas.com`, `.org`, and `.net` were all unregistered.)
+- [ ] `kidsdovegas.com` is pointed at production, with HTTPS, and no longer marked `noindex`. (Registered in M1.)
 - [ ] The sitemap is submitted to Google Search Console.
 
 ## 11. Success measures
@@ -248,11 +256,11 @@ Measured from PostHog, the admin data, and Google Search Console:
 
 | # | Milestone | Contents |
 |---|---|---|
-| M1 | **Foundation** | Next.js + Payload project, Neon Postgres, R2, Dockerfile, Vercel deploy and cron, PostHog, Resend, the admin collections for the whole data model, English/Spanish routing, and hand-translated site text |
+| M1 | **Foundation** | Next.js + Payload project, Neon Postgres with preview branches, Dockerfile, Vercel deploy and cron, domain registration, PostHog, Resend, the admin collections for the data model in §7, English/Spanish routing, hand-translated site text, reference and sample seeds, and agent tooling (Playwright, Playwright MCP, `pnpm verify`, CI). **Done when** production runs on `kidsdovegas.com` (marked `noindex`), the Editor can create every collection, an empty public page renders in both languages, PostHog has recorded a page view, Resend has delivered a test email, and the cron has run a no-op job. |
 | M2 | **Public Resources** | Resources directory, detail pages, Category and Area pages, About page, Report a problem form with editor email, structured data, sitemap, automatic Spanish translation on publish |
 | M3 | **Library Collector** | The Communico Collector for both library Sources, Special/Regular classification, Collector status view, automatic translation of collected Events |
 | M4 | **Events calendar and search** | Calendar with filters, Regulars view, Event detail pages, site search |
-| M5 | **Content and launch** | Enter about 40 Resources, check the launch criteria, register the domain, go live |
+| M5 | **Content and launch** | Enter about 40 Resources, check the launch criteria, remove `noindex`, go live |
 
 ## 13. After v1
 
@@ -275,7 +283,6 @@ Tracked as [GitHub Issues](https://github.com/bradtaylorcodes/kids-do-vegas/issu
 
 ## 15. Open questions
 
-- What Areas does the launch set include? Proposed: Downtown/Central, Henderson, Summerlin, Northwest, North Las Vegas, Southwest/Enterprise, Southeast/Green Valley, East, Boulder City, Day Trips.
 - Exact mapping from Communico's age categories to numeric Age Ranges (decided during M3, once real feed data is in hand).
 - Whether to email the Las Vegas–Clark County Library District before launch to tell them about the Collector or ask for official access.
 - Which AI model translates Listings into Spanish.

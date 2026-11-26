@@ -19,7 +19,7 @@ A dated occurrence a family would plan an outing around, either one-off or recur
 _Avoid_: Activity, happening
 
 **Recurring Event**:
-An Event defined by a repeating schedule that produces individual dated occurrences on the calendar.
+An Event defined by a repeating schedule that produces individual dated occurrences on the calendar. v1 has none: a routine offering entered by hand is a Resource with a schedule, and collected Events are stored one occurrence at a time.
 _Avoid_: Series, repeating event
 
 **Special Event**:
@@ -72,6 +72,16 @@ _Avoid_: Age bracket, level
 A Listing whose Age Range covers 0–18.
 _Avoid_: Family-friendly (as an age label)
 
+### Editing
+
+**Editor**:
+The person who runs the site and maintains its Listings. Only the Editor can sign in to the admin.
+_Avoid_: Admin, moderator, owner
+
+**Translation Status**:
+Where a Listing's Spanish text stands: Not translated, Automatic (machine-translated, shown with an "Automatically translated" note), or Edited (corrected by the Editor and never overwritten automatically).
+_Avoid_: Spanish status, translation state
+
 ### Members
 
 **Member**:
@@ -103,6 +113,10 @@ _Avoid_: Las Vegas (when meaning the whole region), Vegas
 **Area**:
 A named sub-region of the Las Vegas Valley used for browsing and filtering, such as Henderson, Summerlin, or Northwest. Day-trip destinations outside the valley belong to a dedicated "Day Trips" Area.
 _Avoid_: Neighborhood, zone, region
+
+**Valley-wide**:
+A Listing with no Location and no parent Resource, such as a hotline or an online Event. It matches every Area filter.
+_Avoid_: Online, virtual, no area
 
 ### Data
 
