@@ -1,0 +1,12 @@
+.git
+.next
+node_modules
+.env
+.env.*
+!.env.example
+assets
+docs
+test-results
+playwright-report
+.vscode
+.DS_Store

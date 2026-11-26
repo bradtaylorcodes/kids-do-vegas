@@ -1,0 +1,108 @@
+import { createLocalReq, getAccessResults, type Payload, type TypedUser } from 'payload'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
+import { clearUsers, getTestPayload } from '../helpers/payload'
+
+const editor = { email: 'editor@example.com', password: 'correct-horse-battery' }
+
+let payload: Payload
+
+beforeAll(async () => {
+  payload = await getTestPayload()
+})
+
+afterAll(async () => {
+  await payload.destroy()
+})
+
+beforeEach(async () => {
+  await clearUsers(payload)
+})
+
+describe('creating users', () => {
+  it('lets a visitor create the first user while no user exists', async () => {
+    const user = await payload.create({
+      collection: 'users',
+      data: editor,
+      overrideAccess: false,
+    })
+
+    expect(user.email).toBe(editor.email)
+  })
+
+  it('gives every user the Editor role', async () => {
+    const user = await payload.create({ collection: 'users', data: editor, overrideAccess: false })
+
+    expect(user).toMatchObject({ role: 'editor' })
+  })
+
+  it('refuses a visitor creating another user once a user exists', async () => {
+    await payload.create({ collection: 'users', data: editor, overrideAccess: false })
+
+    await expect(
+      payload.create({
+        collection: 'users',
+        data: { email: 'intruder@example.com', password: 'let-me-in-please' },
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow(/not allowed/i)
+  })
+})
+
+describe('reaching the admin', () => {
+  const adminAccessFor = async (user: TypedUser | null) => {
+    const req = await createLocalReq({ user: user ?? undefined }, payload)
+    const { canAccessAdmin } = await getAccessResults({ req })
+    return { canAccessAdmin, req }
+  }
+
+  const createEditor = () =>
+    payload.create({ collection: 'users', data: editor, overrideAccess: true })
+
+  it('lets the Editor into the admin and its operations', async () => {
+    const user = await createEditor()
+    const { canAccessAdmin } = await adminAccessFor({ ...user, collection: 'users' })
+
+    expect(canAccessAdmin).toBe(true)
+    const users = await payload.find({ collection: 'users', user, overrideAccess: false })
+    expect(users.docs.map((u) => u.email)).toEqual([editor.email])
+  })
+
+  it('refuses a signed-in user without the Editor role', async () => {
+    const created = await createEditor()
+    const notEditor = { ...created, collection: 'users', role: 'member' } as unknown as TypedUser
+    const { canAccessAdmin } = await adminAccessFor(notEditor)
+
+    expect(canAccessAdmin).toBeFalsy()
+    await expect(
+      payload.find({ collection: 'users', user: notEditor, overrideAccess: false }),
+    ).rejects.toThrow(/not allowed/i)
+    await expect(
+      payload.update({
+        collection: 'users',
+        id: created.id,
+        data: { email: 'taken-over@example.com' },
+        user: notEditor,
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow(/not allowed/i)
+    await expect(
+      payload.delete({
+        collection: 'users',
+        id: created.id,
+        user: notEditor,
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow(/not allowed/i)
+  })
+
+  it('refuses a visitor who is not signed in', async () => {
+    await createEditor()
+    const { canAccessAdmin } = await adminAccessFor(null)
+
+    expect(canAccessAdmin).toBeFalsy()
+    await expect(payload.find({ collection: 'users', overrideAccess: false })).rejects.toThrow(
+      /not allowed/i,
+    )
+  })
+})
