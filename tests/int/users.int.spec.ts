@@ -68,6 +68,20 @@ describe('reaching the admin', () => {
     expect(users.docs.map((u) => u.email)).toEqual([editor.email])
   })
 
+  it('ignores an attempt to change the role', async () => {
+    const user = await createEditor()
+
+    const updated = await payload.update({
+      collection: 'users',
+      id: user.id,
+      data: { role: 'member' as never }, // 'as never': the type only allows 'editor'
+      user,
+      overrideAccess: false,
+    })
+
+    expect(updated.role).toBe('editor')
+  })
+
   it('refuses a signed-in user without the Editor role', async () => {
     const created = await createEditor()
     const notEditor = { ...created, collection: 'users', role: 'member' } as unknown as TypedUser
