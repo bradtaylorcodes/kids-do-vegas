@@ -34,7 +34,7 @@ Deploys run migrations before building (`pnpm build:deploy`, set as Vercel's bui
 
 ### End-to-end testing tools
 
-Playwright MCP is configured in `.mcp.json` for checking the running app in a browser.
+Playwright MCP is configured in `.mcp.json` for checking the running app in a browser. It's pinned in `devDependencies` and runs headless Chromium with an in-memory profile, so no sign-in carries over between sessions. It uses a newer Playwright than the tests, so install its browser once with `pnpm exec playwright-mcp install-browser chromium`.
 
 ## Agent skills
 
