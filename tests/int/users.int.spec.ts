@@ -1,4 +1,10 @@
-import { createLocalReq, getAccessResults, type Payload, type TypedUser } from 'payload'
+import {
+  createLocalReq,
+  getAccessResults,
+  registerFirstUserOperation,
+  type Payload,
+  type TypedUser,
+} from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearUsers, getTestPayload } from '../helpers/payload'
@@ -20,32 +26,54 @@ beforeEach(async () => {
 })
 
 describe('creating users', () => {
-  it('lets a visitor create the first user while no user exists', async () => {
-    const user = await payload.create({
-      collection: 'users',
-      data: editor,
-      overrideAccess: false,
-    })
-
-    expect(user.email).toBe(editor.email)
+  it('refuses a visitor creating a user, even when no user exists', async () => {
+    await expect(
+      payload.create({ collection: 'users', data: editor, overrideAccess: false }),
+    ).rejects.toThrow(/not allowed/i)
   })
 
-  it('gives every user the Editor role', async () => {
-    const user = await payload.create({ collection: 'users', data: editor, overrideAccess: false })
-
-    expect(user).toMatchObject({ role: 'editor' })
-  })
-
-  it('refuses a visitor creating another user once a user exists', async () => {
-    await payload.create({ collection: 'users', data: editor, overrideAccess: false })
+  it('refuses the Editor creating another user', async () => {
+    const user = await payload.create({ collection: 'users', data: editor, overrideAccess: true })
 
     await expect(
       payload.create({
         collection: 'users',
-        data: { email: 'intruder@example.com', password: 'let-me-in-please' },
+        data: { email: 'second@example.com', password: 'another-long-password' },
+        user,
         overrideAccess: false,
       }),
     ).rejects.toThrow(/not allowed/i)
+  })
+
+  it("lets the admin's first-user page register the Editor while no user exists", async () => {
+    const req = await createLocalReq({}, payload)
+
+    const { user } = await registerFirstUserOperation({
+      collection: payload.collections.users,
+      data: { ...editor, role: 'editor' },
+      req,
+    })
+
+    expect(user).toMatchObject({ email: editor.email, role: 'editor' })
+  })
+
+  it("refuses the admin's first-user page once a user exists", async () => {
+    await payload.create({ collection: 'users', data: editor, overrideAccess: true })
+    const req = await createLocalReq({}, payload)
+
+    await expect(
+      registerFirstUserOperation({
+        collection: payload.collections.users,
+        data: { email: 'intruder@example.com', password: 'let-me-in-please', role: 'editor' },
+        req,
+      }),
+    ).rejects.toThrow(/not allowed/i)
+  })
+
+  it('gives every user the Editor role', async () => {
+    const user = await payload.create({ collection: 'users', data: editor, overrideAccess: true })
+
+    expect(user).toMatchObject({ role: 'editor' })
   })
 })
 

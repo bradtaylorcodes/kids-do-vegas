@@ -19,6 +19,7 @@ pnpm dev                # app on http://localhost:3000, admin at /admin
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Start the app and admin locally. |
+| `pnpm create-editor` | Create the Editor in an empty database, e.g. production before launch. Needs `EDITOR_EMAIL` and `EDITOR_PASSWORD`. Never wipes anything; refuses if a user exists. |
 | `pnpm seed` | Drop the local database, rebuild the schema, and load the seed (the local Editor). |
 | `pnpm test` | Vitest integration tests against Payload's Local API and a real Postgres database (`kidsdovegas_test`, created automatically). Never mock the database. Run one file with `pnpm test tests/int/users.int.spec.ts`. |
 | `pnpm test:e2e` | Playwright end-to-end tests. Runs `pnpm seed` first, then uses your running `pnpm dev` or starts one. |

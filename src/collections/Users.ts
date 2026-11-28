@@ -1,12 +1,6 @@
-import type { Access, CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
 
 import { isEditor, userIsEditor } from '../access/isEditor'
-
-/** Creating a user is allowed only while no user exists: the first sign-up becomes the Editor. */
-const noUserExistsYet: Access = async ({ req }) => {
-  const { totalDocs } = await req.payload.count({ collection: 'users', req })
-  return totalDocs === 0
-}
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -16,7 +10,10 @@ export const Users: CollectionConfig = {
   auth: true,
   access: {
     admin: ({ req }) => userIsEditor(req.user),
-    create: noUserExistsYet,
+    // The API never creates users. The Editor comes from `pnpm create-editor` (production)
+    // or `pnpm seed` (local); both skip access rules. The admin's /create-first-user page
+    // also skips this rule, but Payload only allows it while no user exists.
+    create: () => false,
     read: isEditor,
     update: isEditor,
     delete: isEditor,
